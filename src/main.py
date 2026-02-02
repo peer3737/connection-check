@@ -48,7 +48,7 @@ def lambda_handler(event, context):
             log.error(f"Geen instellingen gevonden voor ID: {database_id}")
             return {'statusCode': 404, 'body': 'Settings not found'}
 
-        test_host = database_settings[0]['host']
+        test_host = database_settings[0]['host'][0]
         test_port = 8001
         url = f"http://{test_host}:{test_port}/ping" # Of een specifiek endpoint
 
