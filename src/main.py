@@ -7,20 +7,9 @@ import os
 import json
 
 
-class CorrelationIdFilter(logging.Filter):
-    def __init__(self):
-        super().__init__()
-        # Generate a new correlation ID
-        self.correlation_id = str(uuid.uuid4())
-
-    def filter(self, record):
-        # Add correlation ID to the log record
-        record.correlation_id = self.correlation_id
-        return True
-
 
 # Logging formatter that includes the correlation ID
-formatter = logging.Formatter('[%(levelname)s] [%(asctime)s] [Correlation ID: %(correlation_id)s] %(message)s')
+formatter = logging.Formatter('[%(levelname)s] [%(asctime)s] %(message)s')
 
 # Set up the root logger
 log = logging.getLogger()
@@ -48,7 +37,7 @@ def lambda_handler(event, context):
             log.error(f"Geen instellingen gevonden voor ID: {database_id}")
             return {'statusCode': 404, 'body': 'Settings not found'}
 
-        test_host = database_settings[0]['host']
+        test_host = database_settings[0]['host'][0]
         test_port = 8001
         url = f"http://{test_host}:{test_port}/ping" # Of een specifiek endpoint
 
@@ -58,7 +47,7 @@ def lambda_handler(event, context):
         # Zo voorkom je dat je Lambda onnodig lang blijft draaien (en geld kost)
         response = requests.get(url, timeout=5)
 
-        if response.status_code == 200:
+        if response.status_code == database_settings[0]['host'][1]:
             log.info(f"Success: Raspberry Pi is online. Status: {response.status_code}")
             return {
                 'statusCode': 200,
@@ -80,3 +69,5 @@ def lambda_handler(event, context):
     except Exception as e:
         log.error(f"Onverwachte fout: {str(e)}")
         return {'statusCode': 500, 'body': json.dumps({'error': 'internal_server_error'})}
+
+lambda_handler(None, None)
